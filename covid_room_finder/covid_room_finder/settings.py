@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'authentication',
+    'rooms_and_bookings',
 ]
 
 MIDDLEWARE = [
@@ -123,6 +124,8 @@ USE_TZ = True
 
 #JWT
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+
+APPEND_SLASH=False
 
 
 # Static files (CSS, JavaScript, Images)
