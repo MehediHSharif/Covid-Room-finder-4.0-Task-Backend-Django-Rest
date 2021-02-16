@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import BookingList,BookingListEdit
+from .views import Booking,Capacity
 
 urlpatterns=[
-    path('',BookingList.as_view()),
-    path('bookings',BookingList.as_view())
+    path('booking',Booking.as_view()),
+    path('capacity/<str:pk>',Capacity.as_view()),
 ]

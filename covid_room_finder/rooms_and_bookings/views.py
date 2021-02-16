@@ -1,27 +1,60 @@
 from django.shortcuts import render
-from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
-from .models import Bookings
+from rest_framework.views import APIView
+from .models import Bookings, Rooms
 from .serializers import BookingsSerializer
 from rest_framework import permissions
+from rest_framework.response import Response
+import json
 # Create your views here.
 
-class BookingList(ListCreateAPIView):
 
-    serializer_class=BookingsSerializer
-    permission_classes =(permissions.IsAuthenticated,)
+class Booking(APIView):
+    #permission_classes =(permissions.IsAuthenticated,)
+    def post(self, request):
+        serializer = BookingsSerializer(data=request.data)
+        if serializer.is_valid():
+            item = json.dumps(request.data)
+            booking_item = json.loads(item)
+            # Allowed person in the requested room
+            allowed = Rooms.objects.get(
+                roomname=booking_item['room_name']).allowedperson
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+            # already booked count in that room in that date
+            count = Bookings.objects.filter(
+                room_name=booking_item['room_name'], date=booking_item['date']).count()
 
-    def get_queryset(self):
-        return Bookings.objects.filter(user=self.request.user)
+            if allowed > count:
+                serializer.save()
+                return Response(serializer.data, status=201)
 
-class BookingListEdit(RetrieveUpdateDestroyAPIView):
+            elif allowed <= count:
+                availablerooms = ""
+                allrooms = Rooms.objects.all()
+                for room in allrooms.iterator():
+                    allowed1 = Rooms.objects.get(
+                        roomname=room.roomname).allowedperson
 
-    serializer_class=BookingsSerializer
-    permission_classes =(permissions.IsAuthenticated,)
+                    count1 = Bookings.objects.filter(
+                        room_name=room.roomname, date=booking_item['date']).count()
+                    if allowed1 > count1:
+                        availablerooms = availablerooms+room.roomname+", "
 
-    
+                print(availablerooms)
 
-    def get_queryset(self):
-        return Bookings.objects.filter(user=self.request.user)
+                return Response(availablerooms, status=400)
+
+        return Response(None, status=400)
+
+
+class Capacity(APIView):
+
+    def get(self, request, pk):
+        total_count = 0
+        allrooms = Rooms.objects.all()
+        single_day_count = Bookings.objects.filter(date=pk).count()
+        for room in allrooms.iterator():
+            allowed1 = Rooms.objects.get(roomname=room.roomname).allowedperson
+            total_count = total_count+allowed1
+
+        Available_space = ((total_count-single_day_count)/total_count)*100
+        return Response(Available_space)
