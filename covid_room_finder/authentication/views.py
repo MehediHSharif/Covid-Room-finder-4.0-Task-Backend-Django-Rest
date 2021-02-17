@@ -6,6 +6,7 @@ from rest_framework import status
 from django.conf import settings
 from django.contrib import auth
 import jwt
+from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 

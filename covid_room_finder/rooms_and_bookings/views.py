@@ -4,12 +4,12 @@ from .models import Bookings, Rooms
 from .serializers import BookingsSerializer
 from rest_framework import permissions
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 import json
 # Create your views here.
 
 
 class Booking(APIView):
-    #permission_classes =(permissions.IsAuthenticated,)
     def post(self, request):
         serializer = BookingsSerializer(data=request.data)
         if serializer.is_valid():
@@ -25,7 +25,11 @@ class Booking(APIView):
 
             if allowed > count:
                 serializer.save()
-                return Response(serializer.data, status=201)
+                content={
+                    'confirmed':'true',
+                    'data': serializer.data
+                }
+                return Response(content, status=201)
 
             elif allowed <= count:
                 availablerooms = ""
@@ -40,8 +44,13 @@ class Booking(APIView):
                         availablerooms = availablerooms+room.roomname+", "
 
                 print(availablerooms)
+                content={
+                    'confirmed':'false',
+                    'data': availablerooms
+                }
+                
 
-                return Response(availablerooms, status=400)
+                return Response(content)
 
         return Response(None, status=400)
 
